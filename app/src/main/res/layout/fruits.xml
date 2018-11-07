@@ -41,7 +41,8 @@
             android:layout_height="wrap_content"
             android:text="Jeruk"
             android:textColor="#ffff"
-            android:onClick="onRadioButtonClicked" />
+            android:onClick="onRadioButtonClicked"
+            android:checked="true"/>
         <RadioButton android:id="@+id/radio_semangka"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

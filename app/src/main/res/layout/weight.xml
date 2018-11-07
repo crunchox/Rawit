@@ -42,7 +42,8 @@
             android:layout_weight="1"
             android:text="50 Gram"
             android:textColor="#ffff"
-            android:onClick="onRadioButtonClicked"/>
+            android:onClick="onRadioButtonClicked"
+            android:checked="true"/>
         <RadioButton android:id="@+id/radio_100Gram"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -74,12 +75,12 @@
             android:textStyle="bold" />
 
         <Button
-            android:id="@+id/btn_next"
+            android:id="@+id/btn_finish"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="right"
             android:layout_weight=".30"
-            android:text="Next >" />
+            android:text="Finish" />
 
     </LinearLayout>
 </LinearLayout>

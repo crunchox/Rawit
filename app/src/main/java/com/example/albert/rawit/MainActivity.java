@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.nfc.Tag;
 import android.support.v4.app.ActivityManagerCompat;
 import android.support.v7.app.AlertDialog;
+import com.loopj.android.http.*;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,13 +15,19 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import cz.msebera.android.httpclient.Header;
+
 public class MainActivity extends AppCompatActivity {
     Dialog fruitDialog,weightDialog;
     Button btnEat,btnDrink;
-    String fruitSelected;
-    int weightSelected;
+    String fruitSelected="jeruk";
+    String fruitNdbno="09200";
+    int weightSelected=50;
     String[] fruitList=new String[]{"Jeruk","Semangka","Nanas","Pepaya","Belimbing"};
-    Toast toast;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
                 fruitDialog.setContentView(R.layout.fruits);
                 fruitDialog.getWindow();
                 fruitDialog.show();
+                Toast.makeText(getApplicationContext(),"Eat",Toast.LENGTH_SHORT).show();
                 Button btnCancel,btnNext;
                 TextView txtHeader;
                 btnCancel=(Button)fruitDialog.findViewById(R.id.btn_cancel);
@@ -54,22 +62,39 @@ public class MainActivity extends AppCompatActivity {
                         weightDialog.setContentView(R.layout.weight);
                         weightDialog.getWindow();
                         weightDialog.show();
-                        Button btnCancel,btnNext;
+                        Toast.makeText(getApplicationContext(),"Weight",Toast.LENGTH_SHORT).show();
+                        Button btnCancel,btnFinish;
                         TextView txtHeader;
                         btnCancel=(Button)weightDialog.findViewById(R.id.btn_cancel);
-                        btnNext=(Button)weightDialog.findViewById(R.id.btn_next);
+                        btnFinish=(Button)weightDialog.findViewById(R.id.btn_finish);
                         txtHeader=(TextView)weightDialog.findViewById(R.id.txt_Header);
-                        txtHeader.setText("Count a fruit");
+                        txtHeader.setText("How many gram you eat?");
                         btnCancel.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
                                 weightDialog.dismiss();
                             }
                         });
-                        btnNext.setOnClickListener(new View.OnClickListener() {
+                        btnFinish.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-                                toast.makeText(view.getContext(),"fruit:",Toast.LENGTH_LONG);
+                                weightDialog.dismiss();
+                                AsyncHttpClient client=new AsyncHttpClient();
+                                client.get("https://api.nal.usda.gov/ndb/V2/reports?ndbno="+fruitNdbno+"&type=f&format=json&api_key=9mmcwZMDKBZIQGWhx97v0jWfWPzmS5prWuXwdC4d", new JsonHttpResponseHandler(){
+                                    @Override
+                                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                                        super.onSuccess(statusCode, headers, response);
+                                        Toast.makeText(getApplicationContext(),"on Success",Toast.LENGTH_SHORT).show();
+                                        try{
+                                            String data=response.getString("foods");
+                                            Log.i("hasilnya",data);
+
+                                        }catch (JSONException e){
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                });
+                                Toast.makeText(getApplicationContext(),"Kamu makan buah "+fruitSelected+" dengan berat "+weightSelected+" gram",Toast.LENGTH_LONG).show();
                             }
                         });
                     }
@@ -80,8 +105,7 @@ public class MainActivity extends AppCompatActivity {
         btnDrink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                toast=Toast.makeText(getApplicationContext(),"Input Drink",Toast.LENGTH_SHORT);
-                toast.show();
+                Toast.makeText(getApplicationContext(),"Input Drink",Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -94,24 +118,34 @@ public class MainActivity extends AppCompatActivity {
         // Check which radio button was clicked
         switch(view.getId()) {
             case R.id.radio_jeruk:
-                if (checked)
-                    fruitSelected="jeruk";
+                if (checked) {
+                    fruitSelected = "jeruk";
+                    fruitNdbno = "09200";
+                }
                     break;
             case R.id.radio_semangka:
-                if (checked)
-                    fruitSelected="semangka";
+                if (checked) {
+                    fruitSelected = "semangka";
+                    fruitNdbno = "09326";
+                }
                     break;
             case R.id.radio_nanas:
-                if (checked)
-                    fruitSelected="nanas";
+                if (checked) {
+                    fruitSelected = "nanas";
+                    fruitNdbno="09266";
+                }
                 break;
             case R.id.radio_pepaya:
-                if (checked)
-                    fruitSelected="pepaya";
+                if (checked) {
+                    fruitSelected = "pepaya";
+                    fruitNdbno="09226";
+                }
                 break;
             case R.id.radio_belimbing:
-                if (checked)
-                    fruitSelected="belimbing";
+                if (checked) {
+                    fruitSelected = "belimbing";
+                    fruitNdbno = "09060";
+                }
                 break;
             case R.id.radio_50gram:
                 if (checked)
