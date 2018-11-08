@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,20 +23,27 @@ import org.json.JSONObject;
 import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity {
-    Dialog fruitDialog,weightDialog;
+    Dialog fruitDialog,weightDialog,loadingDialog;
     Button btnEat,btnDrink;
-    String fruitSelected="jeruk";
+    TextView tvWaterIntake,tvWaterRequired;
+    EditText etWeight;
+    String fruitSelected="Jeruk";
     String fruitNdbno="09200";
-    int weightSelected=50;
-    String[] fruitList=new String[]{"Jeruk","Semangka","Nanas","Pepaya","Belimbing"};
+    double weightSelected=0;
+    double waterIntake=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btnEat=(Button)findViewById(R.id.btn_eat);
         btnDrink=(Button)findViewById(R.id.btn_drink);
+        tvWaterIntake=(TextView)findViewById(R.id.tv_water_intake);
+        tvWaterIntake.setText(Double.toString(waterIntake));
+        tvWaterRequired=(TextView)findViewById(R.id.tv_water_required);
+        etWeight=(EditText)findViewById(R.id.et_weight);
         fruitDialog=new Dialog(this);
         weightDialog=new Dialog(this);
+        loadingDialog=new Dialog(this);
         btnEat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -79,19 +87,54 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onClick(View view) {
                                 weightDialog.dismiss();
+                                if(etWeight.getText().toString().matches("")){
+                                    //pilih di radio button
+                                }else{
+                                    weightSelected=Double.parseDouble(etWeight.getText().toString());
+                                }
+                                loadingDialog.setContentView(R.layout.loading);
+                                loadingDialog.show();
                                 AsyncHttpClient client=new AsyncHttpClient();
                                 client.get("https://api.nal.usda.gov/ndb/V2/reports?ndbno="+fruitNdbno+"&type=f&format=json&api_key=9mmcwZMDKBZIQGWhx97v0jWfWPzmS5prWuXwdC4d", new JsonHttpResponseHandler(){
                                     @Override
                                     public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                                         super.onSuccess(statusCode, headers, response);
-                                        Toast.makeText(getApplicationContext(),"on Success",Toast.LENGTH_SHORT).show();
+                                        //Log.i("hasilresponse",String.valueOf(response));
+                                        double refuse=0,value=0;
                                         try{
-                                            String data=response.getString("foods");
-                                            Log.i("hasilnya",data);
-
+                                            JSONArray arrFood=response.getJSONArray("foods");
+                                            for (int i =0 ; i<arrFood.length();i++) {
+                                                JSONObject objFood = (JSONObject) arrFood.getJSONObject(i);
+                                                //Log.i("hasilobjfood",String.valueOf(objFood));
+                                                JSONObject food=objFood.getJSONObject("food");
+                                                //Log.i("hasilfood",String.valueOf(food));
+                                                JSONObject desc=food.getJSONObject("desc");
+                                                //Log.i("hasildesc",String.valueOf(desc));
+                                                //Log.i("hasilrefuse",String.valueOf(desc.getString("r").substring(0,2)));
+                                               // Log.i("hasilrefuse",String.valueOf(desc.getString("r").length()));
+                                                if(desc.getString("r").length()==2){
+                                                    refuse=Double.parseDouble(desc.getString("r").substring(0,1));
+                                                }else if(desc.getString("r").length()==3){
+                                                    refuse=Double.parseDouble(desc.getString("r").substring(0,2));
+                                                }
+                                                JSONArray arrNutrient=food.getJSONArray("nutrients");
+                                                for (int j=0;j<1;j++){
+                                                    JSONObject objNutrient = (JSONObject) arrNutrient.getJSONObject(i);
+                                                    //Log.i("hasilobjnutrient",String.valueOf(objNutrient));
+                                                    //Log.i("hasilvalue",String.valueOf(objNutrient.getDouble("value")));
+                                                    value=objNutrient.getDouble("value");
+                                                    //Log.i("hasilvalue",String.valueOf(value));
+                                                }
+                                            }
+                                            Log.i("hasil "+fruitSelected,String.valueOf(refuse+" "+value));
+                                            double result=(weightSelected/100)*value*(refuse/100);
+                                            Log.i("hasil "+fruitSelected,String.valueOf(result));
+                                            tvWaterIntake.setText(Double.toString(waterIntake+=result));
                                         }catch (JSONException e){
+                                            Log.i("hasil","Ketangkep");
                                             e.printStackTrace();
                                         }
+                                        loadingDialog.dismiss();
                                     }
                                 });
                                 Toast.makeText(getApplicationContext(),"Kamu makan buah "+fruitSelected+" dengan berat "+weightSelected+" gram",Toast.LENGTH_LONG).show();
@@ -119,31 +162,31 @@ public class MainActivity extends AppCompatActivity {
         switch(view.getId()) {
             case R.id.radio_jeruk:
                 if (checked) {
-                    fruitSelected = "jeruk";
+                    fruitSelected = "Jeruk";
                     fruitNdbno = "09200";
                 }
                     break;
             case R.id.radio_semangka:
                 if (checked) {
-                    fruitSelected = "semangka";
+                    fruitSelected = "Semangka";
                     fruitNdbno = "09326";
                 }
                     break;
             case R.id.radio_nanas:
                 if (checked) {
-                    fruitSelected = "nanas";
+                    fruitSelected = "Nanas";
                     fruitNdbno="09266";
                 }
                 break;
             case R.id.radio_pepaya:
                 if (checked) {
-                    fruitSelected = "pepaya";
+                    fruitSelected = "Pepaya";
                     fruitNdbno="09226";
                 }
                 break;
             case R.id.radio_belimbing:
                 if (checked) {
-                    fruitSelected = "belimbing";
+                    fruitSelected = "Belimbing";
                     fruitNdbno = "09060";
                 }
                 break;
