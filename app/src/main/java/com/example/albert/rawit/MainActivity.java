@@ -86,12 +86,12 @@ public class MainActivity extends AppCompatActivity {
                         btnFinish.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-                                weightDialog.dismiss();
                                 if(etWeight.getText().toString().matches("")){
                                     //pilih di radio button
                                 }else{
                                     weightSelected=Double.parseDouble(etWeight.getText().toString());
                                 }
+                                weightDialog.dismiss();
                                 loadingDialog.setContentView(R.layout.loading);
                                 loadingDialog.show();
                                 AsyncHttpClient client=new AsyncHttpClient();
