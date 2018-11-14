@@ -23,13 +23,13 @@ import org.json.JSONObject;
 import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity {
-    Dialog fruitDialog,weightDialog,loadingDialog;
+    Dialog fruitDialog,weightDialog,loadingDialog,waterDialog;
     Button btnEat,btnDrink;
     TextView tvWaterIntake,tvWaterRequired;
-    EditText etWeight;
+    EditText etWeight,etMl;
     String fruitSelected="Jeruk";
     String fruitNdbno="09200";
-    double weightSelected=0;
+    double weightSelected=0,mlSelected=0;
     double waterIntake=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,17 +40,17 @@ public class MainActivity extends AppCompatActivity {
         tvWaterIntake=(TextView)findViewById(R.id.tv_water_intake);
         tvWaterIntake.setText(Double.toString(waterIntake));
         tvWaterRequired=(TextView)findViewById(R.id.tv_water_required);
-        etWeight=(EditText)findViewById(R.id.et_weight);
         fruitDialog=new Dialog(this);
         weightDialog=new Dialog(this);
         loadingDialog=new Dialog(this);
+        waterDialog=new Dialog(this);
         btnEat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 fruitDialog.setContentView(R.layout.fruits);
                 fruitDialog.getWindow();
                 fruitDialog.show();
-                Toast.makeText(getApplicationContext(),"Eat",Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(),"Eat",Toast.LENGTH_SHORT).show();
                 Button btnCancel,btnNext;
                 TextView txtHeader;
                 btnCancel=(Button)fruitDialog.findViewById(R.id.btn_cancel);
@@ -70,12 +70,13 @@ public class MainActivity extends AppCompatActivity {
                         weightDialog.setContentView(R.layout.weight);
                         weightDialog.getWindow();
                         weightDialog.show();
-                        Toast.makeText(getApplicationContext(),"Weight",Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(),"Weight",Toast.LENGTH_SHORT).show();
                         Button btnCancel,btnFinish;
                         TextView txtHeader;
                         btnCancel=(Button)weightDialog.findViewById(R.id.btn_cancel);
                         btnFinish=(Button)weightDialog.findViewById(R.id.btn_finish);
                         txtHeader=(TextView)weightDialog.findViewById(R.id.txt_Header);
+                        etWeight=(EditText)weightDialog.findViewById(R.id.et_weight);
                         txtHeader.setText("How many gram you eat?");
                         btnCancel.setOnClickListener(new View.OnClickListener() {
                             @Override
@@ -128,8 +129,10 @@ public class MainActivity extends AppCompatActivity {
                                             }
                                             Log.i("hasil "+fruitSelected,String.valueOf(refuse+" "+value));
                                             double result=(weightSelected/100)*value*(refuse/100);
-                                            Log.i("hasil "+fruitSelected,String.valueOf(result));
-                                            tvWaterIntake.setText(Double.toString(waterIntake+=result));
+                                            Log.i("hasil "+fruitSelected,String.format("%.2f",result));
+                                            Toast.makeText(getApplicationContext(),"Kamu makan buah "+fruitSelected+" dengan berat "+String.format("%.0f",weightSelected)+" gram.\n" +
+                                                    "Jadi, kamu menerima air sebanyak "+String.format("%.2f",result)+" ml",Toast.LENGTH_LONG).show();
+                                            tvWaterIntake.setText(String.format("%.2f",waterIntake+=result));
                                         }catch (JSONException e){
                                             Log.i("hasil","Ketangkep");
                                             e.printStackTrace();
@@ -137,7 +140,6 @@ public class MainActivity extends AppCompatActivity {
                                         loadingDialog.dismiss();
                                     }
                                 });
-                                Toast.makeText(getApplicationContext(),"Kamu makan buah "+fruitSelected+" dengan berat "+weightSelected+" gram",Toast.LENGTH_LONG).show();
                             }
                         });
                     }
@@ -148,7 +150,39 @@ public class MainActivity extends AppCompatActivity {
         btnDrink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(getApplicationContext(),"Input Drink",Toast.LENGTH_SHORT).show();
+                waterDialog.setContentView(R.layout.water);
+                waterDialog.getWindow();
+                waterDialog.show();
+                Button btnCancel,btnFinish;
+                TextView txtHeader;
+                btnCancel=(Button)waterDialog.findViewById(R.id.btn_cancel);
+                btnFinish=(Button)waterDialog.findViewById(R.id.btn_finish);
+                txtHeader=(TextView)waterDialog.findViewById(R.id.txt_Header);
+                etMl=(EditText)waterDialog.findViewById(R.id.et_ml);
+                txtHeader.setText("How many mililiter you drink?");
+                btnCancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        waterDialog.dismiss();
+                    }
+                });
+                btnFinish.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        waterDialog.dismiss();
+                        loadingDialog.setContentView(R.layout.loading);
+                        loadingDialog.getWindow();
+                        loadingDialog.show();
+                        if(etMl.getText().toString().matches("")){
+                            //pilih di radio button
+                        }else{
+                            mlSelected=Double.parseDouble(etMl.getText().toString());
+                        }
+                        Toast.makeText(getApplicationContext(),"Kamu minum "+String.format("%.0f",mlSelected)+" ml air",Toast.LENGTH_LONG).show();
+                        tvWaterIntake.setText(String.format("%.2f",waterIntake+=mlSelected));
+                        loadingDialog.dismiss();
+                    }
+                });
             }
         });
     }
@@ -201,6 +235,18 @@ public class MainActivity extends AppCompatActivity {
             case R.id.radio_150Gram:
                 if (checked)
                     weightSelected=150;
+                break;
+            case R.id.radio_100ml:
+                if (checked)
+                    mlSelected=100;
+                break;
+            case R.id.radio_300ml:
+                if (checked)
+                    mlSelected=300;
+                break;
+            case R.id.radio_600ml:
+                if (checked)
+                    mlSelected=600;
                 break;
         }
     }
