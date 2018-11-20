@@ -1,17 +1,20 @@
 package com.example.albert.rawit;
 
-import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.app.Dialog;
-import android.nfc.Tag;
-import android.support.v4.app.ActivityManagerCompat;
-import android.support.v7.app.AlertDialog;
+
 import com.loopj.android.http.*;
+
+import android.content.DialogInterface;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,22 +27,37 @@ import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity {
     Dialog fruitDialog,weightDialog,loadingDialog,waterDialog;
-    Button btnEat,btnDrink;
-    TextView tvWaterIntake,tvWaterRequired;
+    Button btnEat,btnDrink,btnLogout;
+//    ImageView ivAbu,ivBiru;
+    ProgressBar progressBar;
+    TextView tvWaterIntake,tvWaterRequired,tvTarget;
     EditText etWeight,etMl;
     String fruitSelected="Jeruk";
     String fruitNdbno="09200";
     double weightSelected=0,mlSelected=0;
     double waterIntake=0;
+    double waterRequired=3000;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btnEat=(Button)findViewById(R.id.btn_eat);
         btnDrink=(Button)findViewById(R.id.btn_drink);
+//        ivAbu=(ImageView)findViewById(R.id.abuabu);
+//        ivBiru=(ImageView)findViewById(R.id.birubiru);
+        progressBar=(ProgressBar)findViewById(R.id.progressBar);
+        btnLogout=(Button)findViewById(R.id.btn_logout);
+        btnLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
         tvWaterIntake=(TextView)findViewById(R.id.tv_water_intake);
         tvWaterIntake.setText(Double.toString(waterIntake));
         tvWaterRequired=(TextView)findViewById(R.id.tv_water_required);
+        tvWaterRequired.setText(Double.toString(waterRequired));
+        tvTarget=(TextView)findViewById(R.id.tv_target);
         fruitDialog=new Dialog(this);
         weightDialog=new Dialog(this);
         loadingDialog=new Dialog(this);
@@ -67,7 +85,18 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
                         fruitDialog.dismiss();
-                        weightDialog.setContentView(R.layout.weight);
+                        if(fruitSelected=="Jeruk"){
+                            weightDialog.setContentView(R.layout.orange_weight);
+                        }else if(fruitSelected=="Semangka"){
+                            weightDialog.setContentView(R.layout.watermelon_weight);
+                        }else if(fruitSelected=="Nanas"){
+                            weightDialog.setContentView(R.layout.pineapple_weight);
+                        }else if(fruitSelected=="Pepaya"){
+                            weightDialog.setContentView(R.layout.papaya_weight);
+                        }else if(fruitSelected=="Belimbing"){
+                            weightDialog.setContentView(R.layout.starfruit_weight);
+                        }
+
                         weightDialog.getWindow();
                         weightDialog.show();
                         //Toast.makeText(getApplicationContext(),"Weight",Toast.LENGTH_SHORT).show();
@@ -137,6 +166,43 @@ public class MainActivity extends AppCompatActivity {
                                             Log.i("hasil","Ketangkep");
                                             e.printStackTrace();
                                         }
+                                        double prog=(waterIntake/waterRequired)*100;
+                                        int progress=(int) prog;
+                                        if(waterIntake<waterRequired){
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                                progressBar.setProgress(progress,true);
+                                            }
+                                        }else{
+                                            tvTarget.setVisibility(View.VISIBLE);
+                                        }
+
+                                    }
+
+                                    @Override
+                                    public void onFinish() {
+                                        super.onFinish();
+                                        loadingDialog.dismiss();
+                                    }
+
+                                    @Override
+                                    public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                                        super.onFailure(statusCode, headers, responseString, throwable);
+                                        AlertDialog.Builder builder;
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                            builder = new AlertDialog.Builder(getApplicationContext(), android.R.style.Theme_Material_Dialog_Alert);
+                                        } else {
+                                            builder = new AlertDialog.Builder(getApplicationContext());
+                                        }
+                                        builder.setTitle("Failed")
+                                                .setMessage("Failed to get data from server, please check your internet connection")
+                                                .setNeutralButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                                                    }
+                                                })
+                                                .setIcon(android.R.drawable.ic_dialog_alert)
+                                                .show();
                                         loadingDialog.dismiss();
                                     }
                                 });
@@ -180,6 +246,15 @@ public class MainActivity extends AppCompatActivity {
                         }
                         Toast.makeText(getApplicationContext(),"Kamu minum "+String.format("%.0f",mlSelected)+" ml air",Toast.LENGTH_LONG).show();
                         tvWaterIntake.setText(String.format("%.2f",waterIntake+=mlSelected));
+                        double prog=(waterIntake/waterRequired)*100;
+                        int progress=(int) prog;
+                        if(waterIntake<waterRequired){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                progressBar.setProgress(progress,true);
+                            }
+                        }else{
+                            tvTarget.setVisibility(View.VISIBLE);
+                        }
                         loadingDialog.dismiss();
                     }
                 });
@@ -224,9 +299,45 @@ public class MainActivity extends AppCompatActivity {
                     fruitNdbno = "09060";
                 }
                 break;
-            case R.id.radio_50gram:
+            case R.id.radio_25Gram:
+                if (checked)
+                    weightSelected=25;
+                break;
+            case R.id.radio_26Gram:
+                if (checked)
+                    weightSelected=26;
+                break;
+            case R.id.radio_33Gram:
+                if (checked)
+                    weightSelected=33;
+                break;
+            case R.id.radio_50Gram:
                 if (checked)
                     weightSelected=50;
+                break;
+            case R.id.radio_52Gram:
+                if (checked)
+                    weightSelected=52;
+                break;
+            case R.id.radio_66Gram:
+                if (checked)
+                    weightSelected=66;
+                break;
+            case R.id.radio_75Gram:
+                if (checked)
+                    weightSelected=75;
+                break;
+            case R.id.radio_78Gram:
+                if (checked)
+                    weightSelected=78;
+                break;
+            case R.id.radio_90Gram:
+                if (checked)
+                    weightSelected=90;
+                break;
+            case R.id.radio_99Gram:
+                if (checked)
+                    weightSelected=99;
                 break;
             case R.id.radio_100Gram:
                 if (checked)
@@ -235,6 +346,14 @@ public class MainActivity extends AppCompatActivity {
             case R.id.radio_150Gram:
                 if (checked)
                     weightSelected=150;
+                break;
+            case R.id.radio_180Gram:
+                if (checked)
+                    weightSelected=180;
+                break;
+            case R.id.radio_270Gram:
+                if (checked)
+                    weightSelected=270;
                 break;
             case R.id.radio_100ml:
                 if (checked)
