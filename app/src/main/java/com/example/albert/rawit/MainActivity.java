@@ -159,8 +159,8 @@ public class MainActivity extends AppCompatActivity {
                                             Log.i("hasil "+fruitSelected,String.valueOf(refuse+" "+value));
                                             double result=(weightSelected/100)*value*(refuse/100);
                                             Log.i("hasil "+fruitSelected,String.format("%.2f",result));
-                                            Toast.makeText(getApplicationContext(),"Kamu makan buah "+fruitSelected+" dengan berat "+String.format("%.0f",weightSelected)+" gram.\n" +
-                                                    "Jadi, kamu menerima air sebanyak "+String.format("%.2f",result)+" ml",Toast.LENGTH_LONG).show();
+                                            Toast.makeText(getApplicationContext(),"You eat "+String.format("%.0f",weightSelected)+" gram of "+fruitSelected+".\n" +
+                                                    "So, you receive "+String.format("%.2f",result)+" ml water.",Toast.LENGTH_LONG).show();
                                             tvWaterIntake.setText(String.format("%.2f",waterIntake+=result));
                                         }catch (JSONException e){
                                             Log.i("hasil","Ketangkep");
@@ -244,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
                         }else{
                             mlSelected=Double.parseDouble(etMl.getText().toString());
                         }
-                        Toast.makeText(getApplicationContext(),"Kamu minum "+String.format("%.0f",mlSelected)+" ml air",Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(),"You drink "+String.format("%.0f",mlSelected)+" ml water",Toast.LENGTH_LONG).show();
                         tvWaterIntake.setText(String.format("%.2f",waterIntake+=mlSelected));
                         double prog=(waterIntake/waterRequired)*100;
                         int progress=(int) prog;
@@ -253,6 +253,9 @@ public class MainActivity extends AppCompatActivity {
                                 progressBar.setProgress(progress,true);
                             }
                         }else{
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                progressBar.setProgress(progress,true);
+                            }
                             tvTarget.setVisibility(View.VISIBLE);
                         }
                         loadingDialog.dismiss();
@@ -271,31 +274,31 @@ public class MainActivity extends AppCompatActivity {
         switch(view.getId()) {
             case R.id.radio_jeruk:
                 if (checked) {
-                    fruitSelected = "Jeruk";
+                    fruitSelected = "Orange";
                     fruitNdbno = "09200";
                 }
                     break;
             case R.id.radio_semangka:
                 if (checked) {
-                    fruitSelected = "Semangka";
+                    fruitSelected = "Watermelon";
                     fruitNdbno = "09326";
                 }
                     break;
             case R.id.radio_nanas:
                 if (checked) {
-                    fruitSelected = "Nanas";
+                    fruitSelected = "Pineapple";
                     fruitNdbno="09266";
                 }
                 break;
             case R.id.radio_pepaya:
                 if (checked) {
-                    fruitSelected = "Pepaya";
+                    fruitSelected = "Papaya";
                     fruitNdbno="09226";
                 }
                 break;
             case R.id.radio_belimbing:
                 if (checked) {
-                    fruitSelected = "Belimbing";
+                    fruitSelected = "Starfruit";
                     fruitNdbno = "09060";
                 }
                 break;
