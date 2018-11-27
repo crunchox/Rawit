@@ -3,10 +3,17 @@ package com.example.albert.rawit;
 import android.app.AlertDialog;
 import android.app.Dialog;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.loopj.android.http.*;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -37,20 +44,35 @@ public class MainActivity extends AppCompatActivity {
     double weightSelected=0,mlSelected=0;
     double waterIntake=0;
     double waterRequired=3000;
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
+    @Override
+    protected void onStart(){
+        super.onStart();
+        mAuth.addAuthStateListener((mAuthListener));
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mAuth = FirebaseAuth.getInstance();
+        mAuthListener=new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                if(firebaseAuth.getCurrentUser()==null){
+                    Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                    startActivity(intent);
+                }
+            }
+        };
         btnEat=(Button)findViewById(R.id.btn_eat);
         btnDrink=(Button)findViewById(R.id.btn_drink);
-//        ivAbu=(ImageView)findViewById(R.id.abuabu);
-//        ivBiru=(ImageView)findViewById(R.id.birubiru);
         progressBar=(ProgressBar)findViewById(R.id.progressBar);
         btnLogout=(Button)findViewById(R.id.btn_logout);
         btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                mAuth.signOut();
             }
         });
         tvWaterIntake=(TextView)findViewById(R.id.tv_water_intake);

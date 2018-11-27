@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "944896047281",
+    "firebase_url": "https://rawit-72883.firebaseio.com",
+    "project_id": "rawit-72883",
+    "storage_bucket": "rawit-72883.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:944896047281:android:aa071ccfec083db7",
+        "android_client_info": {
+          "package_name": "com.example.albert.rawit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "944896047281-1qu1k6lgurqqggbg58askbpfftlpuukt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKFeRN_gHW0_sOPRKM6V0f2maMpldoKBs"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
