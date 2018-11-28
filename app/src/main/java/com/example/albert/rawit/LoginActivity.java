@@ -3,9 +3,15 @@ package com.example.albert.rawit;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.media.SoundPool;
+import android.nfc.Tag;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -29,7 +35,9 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +48,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import static android.Manifest.permission.READ_CONTACTS;
@@ -66,6 +75,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mLoginFormView;
     private FirebaseAuth mAuth;
     private Dialog registerDialog,registerDialog2;
+    private DatePickerDialog.OnDateSetListener mDateSetListener;
+    int year,month,day;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,7 +110,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mEmailSignUpButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                attemptRegister();
+                attemptProfile();
             }
         });
 
@@ -274,7 +285,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                         registerDialog.dismiss();
                                         showProgress(false);
                                         finish();
-                                        //store data fullname dll
+                                        attemptProfile();
                                     } else {
                                         // If sign in fails, display a message to the user.
                                         Log.w("signup", "createUserWithEmail:failure", task.getException());
@@ -289,6 +300,104 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             }
         });
     }
+    private void attemptProfile(){
+        registerDialog2=new Dialog(this);
+        registerDialog2.setContentView(R.layout.register2);
+        registerDialog2.getWindow();
+        registerDialog2.show();
+        final Spinner spinnerGender=(Spinner)registerDialog2.findViewById(R.id.spinner_gender);
+        final Spinner spinnerAct=(Spinner)registerDialog2.findViewById(R.id.spinner_act);
+        final EditText etFirstName,etLastName,etWeight,etHeight;
+        final TextView tvDOB;
+        tvDOB=(TextView) registerDialog2.findViewById(R.id.tvDOB);
+        tvDOB.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Calendar calendar=Calendar.getInstance();
+                int year =calendar.get(Calendar.YEAR);
+                int month =calendar.get(Calendar.MONTH);
+                int day =calendar.get(Calendar.DAY_OF_MONTH);
+
+                DatePickerDialog dialog=new DatePickerDialog(
+                        LoginActivity.this,
+                        AlertDialog.THEME_DEVICE_DEFAULT_LIGHT,
+                        mDateSetListener,
+                        year,month,day);
+                dialog.getWindow();
+                dialog.show();
+            }
+        });
+        mDateSetListener=new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
+                year=i;
+                month=i1+1;
+                day=i2;
+                tvDOB.setText(day+"/"+month+"/"+year);
+            }
+        };
+        etFirstName=(EditText)registerDialog2.findViewById(R.id.firstName);
+        etLastName=(EditText)registerDialog2.findViewById(R.id.lastName);
+        etWeight=(EditText)registerDialog2.findViewById(R.id.weight);
+        etHeight=(EditText)registerDialog2.findViewById(R.id.height);
+        Button btnFinish=(Button)registerDialog2.findViewById(R.id.btn_finish);
+        btnFinish.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String firstName=etFirstName.getText().toString();
+                String lastName=etLastName.getText().toString();
+                String gender=spinnerGender.getSelectedItem().toString();
+                int weight=Integer.parseInt(etWeight.getText().toString());
+                int height=Integer.parseInt(etHeight.getText().toString());
+                String act=spinnerAct.getSelectedItem().toString();
+                double iwl=(15*weight)/24;
+                double rumus1=0,rumus2=0;
+                int age=getAge(year,month,day);
+                if (age<17){
+                    if (weight<10){
+                        rumus1=100*weight;
+                    }else if(weight>20){
+                        rumus1=1500+((weight-20)*20);
+                    }else{
+                        rumus1=1000+((weight-10)*50);
+                    }
+                }else{
+                    rumus1=50*weight;
+                }
+
+                if(gender=="Male"){
+                    rumus2=66.5+(13.7*weight)+(5*height)-(6.8*age);
+                    if(act=="High"){
+                        rumus2=rumus2*2.1;
+                    }else if(act=="Moderate"){
+                        rumus2=rumus2*1.76;
+                    }else{
+                        rumus2=rumus2*1.56;
+                    }
+                }else if(gender=="Female"){
+                    rumus2=65.5+(9.6*weight)+(1.8*height)-(4.7*age);
+                    if(act=="High"){
+                        rumus2=rumus2*2;
+                    }else if(act=="Moderate"){
+                        rumus2=rumus2*1.7;
+                    }else{
+                        rumus2=rumus2*1.55;
+                    }
+                }
+                double waterRequired=(rumus1+rumus2)/2;
+                Log.i("profile",firstName+" "+lastName);
+                Log.i("profile",gender);
+                Log.i("profile",day+"/"+month+"/"+year);
+                Log.i("profile",String.valueOf(age)+" years");
+                Log.i("profile",weight+" kg");
+                Log.i("profile",height+" cm");
+                Log.i("profile",act+" Activity");
+                Log.i("profile",iwl+" ml IWL");
+                Log.i("profile",waterRequired+" ml required");
+            }
+        });
+    }
 
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
@@ -298,6 +407,22 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
         return password.length() > 4;
+    }
+    private int getAge(int year, int month, int day){
+        Calendar dob = Calendar.getInstance();
+        Calendar today = Calendar.getInstance();
+
+        dob.set(year, month, day);
+
+        int age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR);
+
+        if (today.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)){
+            age--;
+        }
+
+        Integer ageInt = new Integer(age);
+
+        return ageInt;
     }
 
     /**

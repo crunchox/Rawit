@@ -22,4 +22,13 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
+    <string-array name="gender">
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
+    <string-array name="activity">
+        <item>High</item>
+        <item>Moderate</item>
+        <item>Low</item>
+    </string-array>
 </resources>

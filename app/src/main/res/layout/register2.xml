@@ -1,15 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
-    android:layout_width="350dp"
-    android:layout_height="475dp"
-    android:background="@color/colorPrimaryDark"
-    android:paddingTop="5dp"
-    android:paddingBottom="5dp"
-    android:paddingLeft="15dp"
-    android:paddingRight="15dp"
-    android:layout_gravity="center">
+    style="@style/Dialog">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -70,43 +62,46 @@
             </android.support.design.widget.TextInputLayout>
         </LinearLayout>
 
-        <android.support.design.widget.TextInputLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <Spinner
-                android:id="@+id/gender_spinner"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:prompt="@string/prompt_gender">
-            </Spinner>
+                android:text="Gender"
+                style="@style/TextView.InputLabel"
+                />
 
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <EditText
-                android:id="@+id/retypePassword"
+            <android.support.v7.widget.AppCompatSpinner
+                android:id="@+id/spinner_gender"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/prompt_retypepassword"
-                android:imeActionId="6"
-                android:imeActionLabel="@string/action_sign_up"
-                android:imeOptions="actionUnspecified"
-                android:inputType="textPassword"
-                android:maxLines="1"
-                android:singleLine="true"/>
+                android:spinnerMode="dialog"
+                android:entries="@array/gender"
+                style="@style/Widget.AppCompat.Spinner.Underlined"
+                />
 
-        </android.support.design.widget.TextInputLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Date of Birth"
+                style="@style/TextView.InputLabel"
+                />
+
+            <TextView
+                android:id="@+id/tvDOB"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/prompt_birth_date"
+                android:textSize="15sp"/>
+
+        </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -121,9 +116,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/prompt_weight"
-                    android:imeActionId="6"
-                    android:imeActionLabel="@string/action_sign_up"
-                    android:imeOptions="actionUnspecified"
                     android:inputType="number"
                     android:maxLines="1"
                     android:singleLine="true"/>
@@ -140,14 +132,32 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/prompt_height"
-                    android:imeActionId="6"
-                    android:imeActionLabel="@string/action_sign_up"
-                    android:imeOptions="actionUnspecified"
                     android:inputType="number"
                     android:maxLines="1"
                     android:singleLine="true"/>
 
             </android.support.design.widget.TextInputLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Level of Activity"
+                style="@style/TextView.InputLabel"
+                />
+
+            <android.support.v7.widget.AppCompatSpinner
+                android:id="@+id/spinner_act"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:spinnerMode="dialog"
+                android:entries="@array/activity"
+                style="@style/Widget.AppCompat.Spinner.Underlined"
+                />
+
         </LinearLayout>
     </LinearLayout>
     <LinearLayout
