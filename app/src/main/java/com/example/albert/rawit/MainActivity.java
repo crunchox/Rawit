@@ -8,6 +8,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.loopj.android.http.*;
 
 import android.content.DialogInterface;
@@ -43,13 +48,16 @@ public class MainActivity extends AppCompatActivity {
     String fruitNdbno="09200";
     double weightSelected=0,mlSelected=0;
     double waterIntake=0;
-    double waterRequired=3000;
+    double waterRequired=0;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
+    private DatabaseReference rootRef,profileRef;
+    private FirebaseUser user;
     @Override
     protected void onStart(){
         super.onStart();
         mAuth.addAuthStateListener((mAuthListener));
+        collectData();
     }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,15 +115,15 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
                         fruitDialog.dismiss();
-                        if(fruitSelected=="Jeruk"){
+                        if(fruitSelected=="Orange"){
                             weightDialog.setContentView(R.layout.orange_weight);
-                        }else if(fruitSelected=="Semangka"){
+                        }else if(fruitSelected=="Watermelon"){
                             weightDialog.setContentView(R.layout.watermelon_weight);
-                        }else if(fruitSelected=="Nanas"){
+                        }else if(fruitSelected=="Pineapple"){
                             weightDialog.setContentView(R.layout.pineapple_weight);
-                        }else if(fruitSelected=="Pepaya"){
+                        }else if(fruitSelected=="Papaya"){
                             weightDialog.setContentView(R.layout.papaya_weight);
-                        }else if(fruitSelected=="Belimbing"){
+                        }else if(fruitSelected=="Starfruit"){
                             weightDialog.setContentView(R.layout.starfruit_weight);
                         }
 
@@ -285,6 +293,47 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+    private void collectData(){
+        user = mAuth.getCurrentUser();
+        if (user!=null){
+            profileRef=FirebaseDatabase.getInstance().getReference(user.getUid());
+            profileRef.child("FirstName").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+            profileRef.child("LastName").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+            profileRef.child("WaterRequired").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.i("profile", String.valueOf(dataSnapshot.getValue(Double.class)));
+                    waterRequired=dataSnapshot.getValue(Double.class);
+                    tvWaterRequired.setText(Double.toString(waterRequired));
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+        }
     }
     public void onRadioButtonClicked(View view) {
         // Is the button now checked?

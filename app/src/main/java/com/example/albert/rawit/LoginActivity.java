@@ -46,6 +46,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -77,6 +82,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private Dialog registerDialog,registerDialog2;
     private DatePickerDialog.OnDateSetListener mDateSetListener;
     int year,month,day;
+    DatabaseReference rootRef,profileRef;
+    Dialog loadingDialog;
+    FirebaseUser user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +106,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 return false;
             }
         });
-
+        loadingDialog=new Dialog(this);
+        loadingDialog.setContentView(R.layout.loading);
         Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -110,7 +119,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mEmailSignUpButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                attemptProfile();
+                attemptRegister();
             }
         });
 
@@ -208,7 +217,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            showProgress(true);
+            loadingDialog.show();
             mAuthTask = new UserLoginTask(email, password);
             mAuthTask.execute((Void) null);
         }
@@ -217,6 +226,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private void attemptRegister(){
         registerDialog=new Dialog(this);
         registerDialog.setContentView(R.layout.register1);
+        registerDialog2=new Dialog(this);
+        registerDialog2.setContentView(R.layout.register2);
         registerDialog.getWindow();
         registerDialog.show();
         Button btnNext;
@@ -228,14 +239,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         btnNext.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                loadingDialog.show();
                 etEmail.setError(null);
                 etPassword.setError(null);
                 etRePassword.setError(null);
-                String email=etEmail.getText().toString();
-                String password=etPassword.getText().toString();
+                final String email=etEmail.getText().toString();
+                final String password=etPassword.getText().toString();
                 String rePassword=etRePassword.getText().toString();
-                Log.i("reg",password);
-                Log.i("reg",rePassword);
                 boolean cancel = false;
                 View focusView = null;
 
@@ -263,138 +273,142 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     // There was an error; don't attempt login and focus the first
                     // form field with an error.
                     focusView.requestFocus();
+                    loadingDialog.dismiss();
                 } else {
                     // Show a progress spinner, and kick off a background task to
                     // perform the user login attempt.
-                    showProgress(true);
                     try {
                         // Simulate network access.
                         Thread.sleep(2000);
                     } catch (InterruptedException e) {
                         e.getMessage();
                     }
-                    mAuth.createUserWithEmailAndPassword(email, password)
-                            .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                                @Override
-                                public void onComplete(@NonNull Task<AuthResult> task) {
-                                    if (task.isSuccessful()) {
-                                        // Sign in success, update UI with the signed-in user's information
-                                        FirebaseUser user = mAuth.getCurrentUser();
-                                        Log.i("signup", "createUserWithEmail:success "+user);
-                                        Toast.makeText(getApplicationContext(),"Auth Success "+user,Toast.LENGTH_SHORT).show();
-                                        registerDialog.dismiss();
-                                        showProgress(false);
-                                        finish();
-                                        attemptProfile();
-                                    } else {
-                                        // If sign in fails, display a message to the user.
-                                        Log.w("signup", "createUserWithEmail:failure", task.getException());
-                                        Toast.makeText(getApplicationContext(), "Authentication failed.",
-                                                Toast.LENGTH_SHORT).show();
-                                        showProgress(false);
+                    loadingDialog.dismiss();
+                    registerDialog.dismiss();
+                    registerDialog2.getWindow();
+                    registerDialog2.show();
+                    final Spinner spinnerGender=(Spinner)registerDialog2.findViewById(R.id.spinner_gender);
+                    final Spinner spinnerAct=(Spinner)registerDialog2.findViewById(R.id.spinner_act);
+                    final EditText etFirstName,etLastName,etWeight,etHeight;
+                    final TextView tvDOB;
+                    tvDOB=(TextView) registerDialog2.findViewById(R.id.tvDOB);
+                    tvDOB.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
 
-                                    }
+                            Calendar calendar=Calendar.getInstance();
+                            int year =calendar.get(Calendar.YEAR);
+                            int month =calendar.get(Calendar.MONTH);
+                            int day =calendar.get(Calendar.DAY_OF_MONTH);
+
+                            DatePickerDialog dialog=new DatePickerDialog(
+                                    LoginActivity.this,
+                                    AlertDialog.THEME_DEVICE_DEFAULT_LIGHT,
+                                    mDateSetListener,
+                                    year,month,day);
+                            dialog.getWindow();
+                            dialog.show();
+                        }
+                    });
+                    mDateSetListener=new DatePickerDialog.OnDateSetListener() {
+                        @Override
+                        public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
+                            year=i;
+                            month=i1+1;
+                            day=i2;
+                            tvDOB.setText(day+"/"+month+"/"+year);
+                        }
+                    };
+                    etFirstName=(EditText)registerDialog2.findViewById(R.id.firstName);
+                    etLastName=(EditText)registerDialog2.findViewById(R.id.lastName);
+                    etWeight=(EditText)registerDialog2.findViewById(R.id.weight);
+                    etHeight=(EditText)registerDialog2.findViewById(R.id.height);
+                    Button btnFinish=(Button)registerDialog2.findViewById(R.id.btn_finish);
+                    btnFinish.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            final String firstName=etFirstName.getText().toString();
+                            final String lastName=etLastName.getText().toString();
+                            final String gender=spinnerGender.getSelectedItem().toString();
+                            final int weight=Integer.parseInt(etWeight.getText().toString());
+                            final int height=Integer.parseInt(etHeight.getText().toString());
+                            final String act=spinnerAct.getSelectedItem().toString();
+                            final double iwl=(15*weight)/24;
+                            double rumus1=0,rumus2=0,amb=0;
+                            final int age=getAge(year,month,day);
+                            if (age<17){
+                                if (weight<10){
+                                    rumus1=100*weight;
+                                }else if(weight>20){
+                                    rumus1=1500+((weight-20)*20);
+                                }else{
+                                    rumus1=1000+((weight-10)*50);
                                 }
-                            });
-                }
-            }
-        });
-    }
-    private void attemptProfile(){
-        registerDialog2=new Dialog(this);
-        registerDialog2.setContentView(R.layout.register2);
-        registerDialog2.getWindow();
-        registerDialog2.show();
-        final Spinner spinnerGender=(Spinner)registerDialog2.findViewById(R.id.spinner_gender);
-        final Spinner spinnerAct=(Spinner)registerDialog2.findViewById(R.id.spinner_act);
-        final EditText etFirstName,etLastName,etWeight,etHeight;
-        final TextView tvDOB;
-        tvDOB=(TextView) registerDialog2.findViewById(R.id.tvDOB);
-        tvDOB.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
+                            }else{
+                                rumus1=50*weight;
+                            }
+                            if(gender.equals("Male")){
+                                amb=66.5+(13.7*weight)+(5*height)-(6.8*age);
+                                if(act.equals("High")){
+                                    rumus2=amb*2.1;
+                                }else if(act.equals("Moderate")){
+                                    rumus2=amb*1.76;
+                                }else{
+                                    rumus2=amb*1.56;
+                                }
+                            }else if(gender.equals("Female")){
+                                amb=65.5+(9.6*weight)+(1.8*height)-(4.7*age);
+                                if(act.equals("High")){
+                                    rumus2=amb*2;
+                                }else if(act.equals("Moderate")){
+                                    rumus2=amb*1.7;
+                                }else{
+                                    rumus2=amb*1.55;
+                                }
+                            }
+                            final double waterRequired=(rumus1+rumus2)/2;
+                            mAuth.createUserWithEmailAndPassword(email, password)
+                                    .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<AuthResult> task) {
+                                            if (task.isSuccessful()) {
+                                                // Sign in success, update UI with the signed-in user's information
+                                                user = mAuth.getCurrentUser();
+                                                rootRef = FirebaseDatabase.getInstance().getReference(user.getUid());
+                                                profileRef = rootRef.child("FirstName");
+                                                profileRef.setValue(firstName);
+                                                profileRef = rootRef.child("LastName");
+                                                profileRef.setValue(lastName);
+                                                profileRef = rootRef.child("Gender");
+                                                profileRef.setValue(gender);
+                                                profileRef = rootRef.child("Age");
+                                                profileRef.setValue(age);
+                                                profileRef = rootRef.child("Weight");
+                                                profileRef.setValue(weight);
+                                                profileRef = rootRef.child("Height");
+                                                profileRef.setValue(height);
+                                                profileRef = rootRef.child("Activity");
+                                                profileRef.setValue(act);
+                                                profileRef = rootRef.child("IWL");
+                                                profileRef.setValue(iwl);
+                                                profileRef = rootRef.child("WaterRequired");
+                                                profileRef.setValue(waterRequired);
+                                                Log.i("signup", "createUserWithEmail:success "+user.getUid());
+                                                Toast.makeText(getApplicationContext(),"Authentication Success",Toast.LENGTH_SHORT).show();
+                                                registerDialog2.dismiss();
+                                                finish();
+                                            } else {
+                                                // If sign in fails, display a message to the user.
+                                                Log.w("signup", "createUserWithEmail:failure", task.getException());
+                                                Toast.makeText(getApplicationContext(), "Authentication failed.",Toast.LENGTH_SHORT).show();
+                                                loadingDialog.dismiss();
 
-                Calendar calendar=Calendar.getInstance();
-                int year =calendar.get(Calendar.YEAR);
-                int month =calendar.get(Calendar.MONTH);
-                int day =calendar.get(Calendar.DAY_OF_MONTH);
-
-                DatePickerDialog dialog=new DatePickerDialog(
-                        LoginActivity.this,
-                        AlertDialog.THEME_DEVICE_DEFAULT_LIGHT,
-                        mDateSetListener,
-                        year,month,day);
-                dialog.getWindow();
-                dialog.show();
-            }
-        });
-        mDateSetListener=new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
-                year=i;
-                month=i1+1;
-                day=i2;
-                tvDOB.setText(day+"/"+month+"/"+year);
-            }
-        };
-        etFirstName=(EditText)registerDialog2.findViewById(R.id.firstName);
-        etLastName=(EditText)registerDialog2.findViewById(R.id.lastName);
-        etWeight=(EditText)registerDialog2.findViewById(R.id.weight);
-        etHeight=(EditText)registerDialog2.findViewById(R.id.height);
-        Button btnFinish=(Button)registerDialog2.findViewById(R.id.btn_finish);
-        btnFinish.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String firstName=etFirstName.getText().toString();
-                String lastName=etLastName.getText().toString();
-                String gender=spinnerGender.getSelectedItem().toString();
-                int weight=Integer.parseInt(etWeight.getText().toString());
-                int height=Integer.parseInt(etHeight.getText().toString());
-                String act=spinnerAct.getSelectedItem().toString();
-                double iwl=(15*weight)/24;
-                double rumus1=0,rumus2=0;
-                int age=getAge(year,month,day);
-                if (age<17){
-                    if (weight<10){
-                        rumus1=100*weight;
-                    }else if(weight>20){
-                        rumus1=1500+((weight-20)*20);
-                    }else{
-                        rumus1=1000+((weight-10)*50);
-                    }
-                }else{
-                    rumus1=50*weight;
+                                            }
+                                        }
+                                    });
+                        }
+                    });
                 }
-
-                if(gender=="Male"){
-                    rumus2=66.5+(13.7*weight)+(5*height)-(6.8*age);
-                    if(act=="High"){
-                        rumus2=rumus2*2.1;
-                    }else if(act=="Moderate"){
-                        rumus2=rumus2*1.76;
-                    }else{
-                        rumus2=rumus2*1.56;
-                    }
-                }else if(gender=="Female"){
-                    rumus2=65.5+(9.6*weight)+(1.8*height)-(4.7*age);
-                    if(act=="High"){
-                        rumus2=rumus2*2;
-                    }else if(act=="Moderate"){
-                        rumus2=rumus2*1.7;
-                    }else{
-                        rumus2=rumus2*1.55;
-                    }
-                }
-                double waterRequired=(rumus1+rumus2)/2;
-                Log.i("profile",firstName+" "+lastName);
-                Log.i("profile",gender);
-                Log.i("profile",day+"/"+month+"/"+year);
-                Log.i("profile",String.valueOf(age)+" years");
-                Log.i("profile",weight+" kg");
-                Log.i("profile",height+" cm");
-                Log.i("profile",act+" Activity");
-                Log.i("profile",iwl+" ml IWL");
-                Log.i("profile",waterRequired+" ml required");
             }
         });
     }
