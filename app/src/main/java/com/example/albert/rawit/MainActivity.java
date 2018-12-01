@@ -325,7 +325,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     Log.i("profile", String.valueOf(dataSnapshot.getValue(Double.class)));
                     waterRequired=dataSnapshot.getValue(Double.class);
-                    tvWaterRequired.setText(Double.toString(waterRequired));
+                    tvWaterRequired.setText(String.format("%.2f",waterRequired));
                 }
 
                 @Override

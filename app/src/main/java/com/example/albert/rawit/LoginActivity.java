@@ -327,6 +327,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     btnFinish.setOnClickListener(new OnClickListener() {
                         @Override
                         public void onClick(View view) {
+                            loadingDialog.show();
                             final String firstName=etFirstName.getText().toString();
                             final String lastName=etLastName.getText().toString();
                             final String gender=spinnerGender.getSelectedItem().toString();
@@ -396,13 +397,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                                 Log.i("signup", "createUserWithEmail:success "+user.getUid());
                                                 Toast.makeText(getApplicationContext(),"Authentication Success",Toast.LENGTH_SHORT).show();
                                                 registerDialog2.dismiss();
+                                                loadingDialog.dismiss();
                                                 finish();
                                             } else {
                                                 // If sign in fails, display a message to the user.
                                                 Log.w("signup", "createUserWithEmail:failure", task.getException());
                                                 Toast.makeText(getApplicationContext(), "Authentication failed.",Toast.LENGTH_SHORT).show();
                                                 loadingDialog.dismiss();
-
                                             }
                                         }
                                     });
