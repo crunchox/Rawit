@@ -8,7 +8,7 @@
     <string name="prompt_first_name">First Name </string>
     <string name="prompt_last_name">Last Name </string>
     <string name="prompt_gender">Gender </string>
-    <string name="prompt_birth_date">Birth Date </string>
+    <string name="prompt_birth_date">Birth Date  </string>
     <string name="prompt_weight">Weight </string>
     <string name="prompt_height">Height </string>
     <string name="prompt_level_of_act">Level of Activity </string>

@@ -177,6 +177,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * errors are presented and no actual login attempt is made.
      */
     private void attemptLogin() {
+        loadingDialog.show();
         if (mAuthTask != null) {
             return;
         }
@@ -214,10 +215,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // There was an error; don't attempt login and focus the first
             // form field with an error.
             focusView.requestFocus();
+            loadingDialog.dismiss();
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            loadingDialog.show();
             mAuthTask = new UserLoginTask(email, password);
             mAuthTask.execute((Void) null);
         }
@@ -249,17 +250,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 boolean cancel = false;
                 View focusView = null;
 
-                if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-                    etPassword.setError(getString(R.string.error_invalid_password));
-                    focusView = etPassword;
-                    cancel = true;
-                }else if(!rePassword.equals(password)){
-                    etRePassword.setError(getString(R.string.error_match_password));
-                    focusView = etRePassword;
-                    cancel = true;
-                }
-
-                // Check for a valid email address.
+                // Validation
                 if (TextUtils.isEmpty(email)) {
                     etEmail.setError(getString(R.string.error_field_required));
                     focusView = etEmail;
@@ -267,6 +258,20 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 } else if (!isEmailValid(email)) {
                     etEmail.setError(getString(R.string.error_invalid_email));
                     focusView = etEmail;
+                    cancel = true;
+                }
+                if (TextUtils.isEmpty(password)) {
+                    etPassword.setError(getString(R.string.error_field_required));
+                    focusView = etPassword;
+                    cancel = true;
+                }else if(!isPasswordValid(password)){
+                    etPassword.setError(getString(R.string.error_invalid_password));
+                    focusView = etPassword;
+                    cancel = true;
+                }
+                if(!rePassword.equals(password)){
+                    etRePassword.setError(getString(R.string.error_match_password));
+                    focusView = etRePassword;
                     cancel = true;
                 }
                 if (cancel) {
@@ -290,8 +295,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     final Spinner spinnerGender=(Spinner)registerDialog2.findViewById(R.id.spinner_gender);
                     final Spinner spinnerAct=(Spinner)registerDialog2.findViewById(R.id.spinner_act);
                     final EditText etFirstName,etLastName,etWeight,etHeight;
-                    final TextView tvDOB;
+                    final TextView tvDOB,tvWarningDOB;
                     tvDOB=(TextView) registerDialog2.findViewById(R.id.tvDOB);
+                    tvWarningDOB=(TextView)registerDialog2.findViewById(R.id.tvWarningDOB);
                     tvDOB.setOnClickListener(new OnClickListener() {
                         @Override
                         public void onClick(View view) {
@@ -328,85 +334,128 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         @Override
                         public void onClick(View view) {
                             loadingDialog.show();
+                            tvWarningDOB.setVisibility(View.GONE);
+                            tvDOB.setError(null);
                             final String firstName=etFirstName.getText().toString();
                             final String lastName=etLastName.getText().toString();
                             final String gender=spinnerGender.getSelectedItem().toString();
-                            final int weight=Integer.parseInt(etWeight.getText().toString());
-                            final int height=Integer.parseInt(etHeight.getText().toString());
                             final String act=spinnerAct.getSelectedItem().toString();
-                            final double iwl=(15*weight)/24;
+                            int weight=0,height=0,age=0;
                             double rumus1=0,rumus2=0,amb=0;
-                            final int age=getAge(year,month,day);
-                            if (age<17){
-                                if (weight<10){
-                                    rumus1=100*weight;
-                                }else if(weight>20){
-                                    rumus1=1500+((weight-20)*20);
-                                }else{
-                                    rumus1=1000+((weight-10)*50);
-                                }
+                            boolean cancel2=false;
+                            View focusView2 = null;
+                            //Validation
+                            if(TextUtils.isEmpty(firstName)){
+                                etFirstName.setError(getString(R.string.error_field_required));
+                                focusView2 = etFirstName;
+                                cancel2 = true;
+                            }
+                            if(TextUtils.isEmpty(etWeight.getText().toString())){
+                                etWeight.setError(getString(R.string.error_field_required));
+                                focusView2 = etWeight;
+                                cancel2 = true;
                             }else{
-                                rumus1=50*weight;
+                                weight=Integer.parseInt(etWeight.getText().toString());
+
                             }
-                            if(gender.equals("Male")){
-                                amb=66.5+(13.7*weight)+(5*height)-(6.8*age);
-                                if(act.equals("High")){
-                                    rumus2=amb*2.1;
-                                }else if(act.equals("Moderate")){
-                                    rumus2=amb*1.76;
-                                }else{
-                                    rumus2=amb*1.56;
-                                }
-                            }else if(gender.equals("Female")){
-                                amb=65.5+(9.6*weight)+(1.8*height)-(4.7*age);
-                                if(act.equals("High")){
-                                    rumus2=amb*2;
-                                }else if(act.equals("Moderate")){
-                                    rumus2=amb*1.7;
-                                }else{
-                                    rumus2=amb*1.55;
-                                }
+                            if(TextUtils.isEmpty(etHeight.getText().toString())){
+                                etHeight.setError(getString(R.string.error_field_required));
+                                focusView2 = etHeight;
+                                cancel2 = true;
+                            }else{
+                                height=Integer.parseInt(etHeight.getText().toString());
                             }
-                            final double waterRequired=(rumus1+rumus2)/2;
-                            mAuth.createUserWithEmailAndPassword(email, password)
-                                    .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<AuthResult> task) {
-                                            if (task.isSuccessful()) {
-                                                // Sign in success, update UI with the signed-in user's information
-                                                user = mAuth.getCurrentUser();
-                                                rootRef = FirebaseDatabase.getInstance().getReference(user.getUid());
-                                                profileRef = rootRef.child("FirstName");
-                                                profileRef.setValue(firstName);
-                                                profileRef = rootRef.child("LastName");
-                                                profileRef.setValue(lastName);
-                                                profileRef = rootRef.child("Gender");
-                                                profileRef.setValue(gender);
-                                                profileRef = rootRef.child("Age");
-                                                profileRef.setValue(age);
-                                                profileRef = rootRef.child("Weight");
-                                                profileRef.setValue(weight);
-                                                profileRef = rootRef.child("Height");
-                                                profileRef.setValue(height);
-                                                profileRef = rootRef.child("Activity");
-                                                profileRef.setValue(act);
-                                                profileRef = rootRef.child("IWL");
-                                                profileRef.setValue(iwl);
-                                                profileRef = rootRef.child("WaterRequired");
-                                                profileRef.setValue(waterRequired);
-                                                Log.i("signup", "createUserWithEmail:success "+user.getUid());
-                                                Toast.makeText(getApplicationContext(),"Authentication Success",Toast.LENGTH_SHORT).show();
-                                                registerDialog2.dismiss();
-                                                loadingDialog.dismiss();
-                                                finish();
-                                            } else {
-                                                // If sign in fails, display a message to the user.
-                                                Log.w("signup", "createUserWithEmail:failure", task.getException());
-                                                Toast.makeText(getApplicationContext(), "Authentication failed.",Toast.LENGTH_SHORT).show();
-                                                loadingDialog.dismiss();
+                            if (year==0&&month==0&&day==0){
+                                tvDOB.setError(getString(R.string.error_field_required));
+                                tvWarningDOB.setVisibility(View.VISIBLE);
+                                focusView2 = tvDOB;
+                                cancel2 = true;
+                            }else{
+                                age=getAge(year,month,day);
+                            }
+
+                            if (cancel2){
+                                focusView2.requestFocus();
+                                loadingDialog.dismiss();
+                            }else{
+                                final double iwl=(15*weight)/24;
+                                if (age<17){
+                                    if (weight<10){
+                                        rumus1=100*weight;
+                                    }else if(weight>20){
+                                        rumus1=1500+((weight-20)*20);
+                                    }else{
+                                        rumus1=1000+((weight-10)*50);
+                                    }
+                                }else{
+                                    rumus1=50*weight;
+                                }
+                                if(gender.equals("Male")){
+                                    amb=66.5+(13.7*weight)+(5*height)-(6.8*age);
+                                    if(act.equals("High")){
+                                        rumus2=amb*2.1;
+                                    }else if(act.equals("Moderate")){
+                                        rumus2=amb*1.76;
+                                    }else{
+                                        rumus2=amb*1.56;
+                                    }
+                                }else if(gender.equals("Female")){
+                                    amb=65.5+(9.6*weight)+(1.8*height)-(4.7*age);
+                                    if(act.equals("High")){
+                                        rumus2=amb*2;
+                                    }else if(act.equals("Moderate")){
+                                        rumus2=amb*1.7;
+                                    }else{
+                                        rumus2=amb*1.55;
+                                    }
+                                }
+                                final double waterRequired=(rumus1+rumus2)/2;
+                                final int ageCopy=age;
+                                final int weightCopy=weight;
+                                final int heightCopy=height;
+                                mAuth.createUserWithEmailAndPassword(email, password)
+                                        .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                                if (task.isSuccessful()) {
+                                                    // Sign in success, update UI with the signed-in user's information
+                                                    user = mAuth.getCurrentUser();
+                                                    rootRef = FirebaseDatabase.getInstance().getReference(user.getUid());
+                                                    profileRef = rootRef.child("FirstName");
+                                                    profileRef.setValue(firstName);
+                                                    profileRef = rootRef.child("LastName");
+                                                    profileRef.setValue(lastName);
+                                                    profileRef = rootRef.child("Gender");
+                                                    profileRef.setValue(gender);
+                                                    profileRef = rootRef.child("Age");
+                                                    profileRef.setValue(ageCopy);
+                                                    profileRef = rootRef.child("Weight");
+                                                    profileRef.setValue(weightCopy);
+                                                    profileRef = rootRef.child("Height");
+                                                    profileRef.setValue(heightCopy);
+                                                    profileRef = rootRef.child("Activity");
+                                                    profileRef.setValue(act);
+                                                    profileRef = rootRef.child("IWL");
+                                                    profileRef.setValue(iwl);
+                                                    profileRef = rootRef.child("WaterIntake");
+                                                    profileRef.setValue(0);
+                                                    profileRef = rootRef.child("WaterRequired");
+                                                    profileRef.setValue(waterRequired);
+                                                    profileRef = rootRef.child("Status");
+                                                    profileRef.setValue("Normal");
+                                                    Log.i("signup", "createUserWithEmail:success "+user.getUid());
+                                                    Toast.makeText(getApplicationContext(),"Authentication Success",Toast.LENGTH_SHORT).show();
+                                                    registerDialog2.dismiss();
+                                                    loadingDialog.dismiss();
+                                                } else {
+                                                    // If sign in fails, display a message to the user.
+                                                    Log.w("signup", "createUserWithEmail:failure", task.getException());
+                                                    Toast.makeText(getApplicationContext(), "Authentication failed.",Toast.LENGTH_SHORT).show();
+                                                    loadingDialog.dismiss();
+                                                }
                                             }
-                                        }
-                                    });
+                                        });
+                            }
                         }
                     });
                 }
@@ -572,7 +621,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                 Log.w("signin", "createUserWithEmail:failure", task.getException());
                                 Toast.makeText(getApplicationContext(), "Authentication failed.",
                                         Toast.LENGTH_SHORT).show();
-
                             }
                         }
                     });
@@ -587,6 +635,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
 
             if (success) {
+                loadingDialog.dismiss();
                 finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
@@ -597,6 +646,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         @Override
         protected void onCancelled() {
             mAuthTask = null;
+            loadingDialog.dismiss();
             showProgress(false);
         }
     }

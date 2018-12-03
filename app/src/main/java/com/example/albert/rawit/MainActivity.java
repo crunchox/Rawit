@@ -15,10 +15,16 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.loopj.android.http.*;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -39,10 +45,11 @@ import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity {
     Dialog fruitDialog,weightDialog,loadingDialog,waterDialog;
-    Button btnEat,btnDrink,btnLogout;
+    Button btnEat,btnDrink,btnLogout,btnReset;
 //    ImageView ivAbu,ivBiru;
     ProgressBar progressBar;
-    TextView tvWaterIntake,tvWaterRequired,tvTarget;
+    TextView tvWaterIntake,tvWaterRequired,tvTarget,tvStatus;
+    TextView tvName,tvAge,tvHeight,tvWeight,tvGender;
     EditText etWeight,etMl;
     String fruitSelected="Jeruk";
     String fruitNdbno="09200";
@@ -83,10 +90,31 @@ public class MainActivity extends AppCompatActivity {
                 mAuth.signOut();
             }
         });
+        btnReset=(Button)findViewById(R.id.btn_reset);
+        btnReset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                waterIntake=0;
+                tvWaterIntake.setText(String.format("%.2f",waterIntake));
+                updateWaterIntake(waterIntake);
+                double prog=(waterIntake/waterRequired)*100;
+                int progress=(int) prog;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    progressBar.setProgress(progress,true);
+                }else{
+                    progressBar.setProgress(progress);
+                }
+                tvTarget.setVisibility(View.GONE);
+            }
+        });
+        tvName=(TextView)findViewById(R.id.tv_Name);
+        tvAge=(TextView)findViewById(R.id.tv_Age);
+        tvHeight=(TextView)findViewById(R.id.tv_Height);
+        tvWeight=(TextView)findViewById(R.id.tv_Weight);
+        tvGender=(TextView)findViewById(R.id.tv_Gender);
+        tvStatus=(TextView)findViewById(R.id.tv_Status);
         tvWaterIntake=(TextView)findViewById(R.id.tv_water_intake);
-        tvWaterIntake.setText(Double.toString(waterIntake));
         tvWaterRequired=(TextView)findViewById(R.id.tv_water_required);
-        tvWaterRequired.setText(Double.toString(waterRequired));
         tvTarget=(TextView)findViewById(R.id.tv_target);
         fruitDialog=new Dialog(this);
         weightDialog=new Dialog(this);
@@ -196,16 +224,23 @@ public class MainActivity extends AppCompatActivity {
                                             Log.i("hasil","Ketangkep");
                                             e.printStackTrace();
                                         }
+                                        updateWaterIntake(waterIntake);
                                         double prog=(waterIntake/waterRequired)*100;
                                         int progress=(int) prog;
                                         if(waterIntake<waterRequired){
                                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                                 progressBar.setProgress(progress,true);
+                                            }else{
+                                                progressBar.setProgress(progress);
                                             }
                                         }else{
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                                progressBar.setProgress(progress,true);
+                                            }else{
+                                                progressBar.setProgress(progress);
+                                            }
                                             tvTarget.setVisibility(View.VISIBLE);
                                         }
-
                                     }
 
                                     @Override
@@ -276,15 +311,20 @@ public class MainActivity extends AppCompatActivity {
                         }
                         Toast.makeText(getApplicationContext(),"You drink "+String.format("%.0f",mlSelected)+" ml water",Toast.LENGTH_LONG).show();
                         tvWaterIntake.setText(String.format("%.2f",waterIntake+=mlSelected));
+                        updateWaterIntake(waterIntake);
                         double prog=(waterIntake/waterRequired)*100;
                         int progress=(int) prog;
                         if(waterIntake<waterRequired){
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                 progressBar.setProgress(progress,true);
+                            }else{
+                                progressBar.setProgress(progress);
                             }
                         }else{
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                 progressBar.setProgress(progress,true);
+                            }else{
+                                progressBar.setProgress(progress);
                             }
                             tvTarget.setVisibility(View.VISIBLE);
                         }
@@ -293,7 +333,42 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+        final Handler handler = new Handler();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Log.i("testing","tampil setiap 2 jam");
+                displayReminder();
+                handler.postDelayed(this, 7200000);
+            }
+        }, 7200000);
     }
+    protected void displayReminder(){
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.logo_temp)
+                        .setContentTitle("You Need Water!")
+                        .setContentText("Dont forget to drink water or eat fruit for your healthy inside, fresh outside!");
+
+        // Gets an instance of the NotificationManager service//
+
+        NotificationManager mNotificationManager =
+
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // When you issue multiple notifications about the same type of event,
+        // it’s best practice for your app to try to update an existing notification
+        // with this new information, rather than immediately creating a new notification.
+        // If you want to update this notification at a later date, you need to assign it an ID.
+        // You can then use this ID whenever you issue a subsequent notification.
+        // If the previous notification is still visible, the system will update this existing notification,
+        // rather than create a new one. In this example, the notification’s ID is 001//
+
+        //mNotificationManager.notify().
+
+        mNotificationManager.notify(001, mBuilder.build());
+    }
+
     private void collectData(){
         user = mAuth.getCurrentUser();
         if (user!=null){
@@ -302,6 +377,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
+                    tvName.setText(dataSnapshot.getValue(String.class)+" ");
                 }
 
                 @Override
@@ -313,6 +389,91 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
+                    tvName.append(dataSnapshot.getValue(String.class));
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+            profileRef.child("Age").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
+                    tvAge.setText(String.valueOf(dataSnapshot.getValue(Integer.class))+" years old");
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+            profileRef.child("Height").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
+                    tvHeight.setText(String.valueOf(dataSnapshot.getValue(Integer.class))+" cm");
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+            profileRef.child("Weight").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
+                    tvWeight.setText(String.valueOf(dataSnapshot.getValue(Integer.class))+" kg");
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+            profileRef.child("Gender").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
+                    tvGender.setText(dataSnapshot.getValue(String.class));
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+            profileRef.child("IWL").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+            profileRef.child("Status").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
+                    tvStatus.setText(dataSnapshot.getValue(String.class));
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+            profileRef.child("WaterIntake").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.i("profile", String.valueOf(dataSnapshot.getValue(Double.class)));
+                    waterIntake=dataSnapshot.getValue(Double.class);
+                    tvWaterIntake.setText(String.format("%.2f",waterIntake));
                 }
 
                 @Override
@@ -326,6 +487,24 @@ public class MainActivity extends AppCompatActivity {
                     Log.i("profile", String.valueOf(dataSnapshot.getValue(Double.class)));
                     waterRequired=dataSnapshot.getValue(Double.class);
                     tvWaterRequired.setText(String.format("%.2f",waterRequired));
+                    double prog=(waterIntake/waterRequired)*100;
+                    int progress=(int) prog;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        progressBar.setProgress(progress,true);
+                    }else{
+                        progressBar.setProgress(progress);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+            profileRef.child("Activity").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
                 }
 
                 @Override
@@ -334,6 +513,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+    private void updateWaterIntake(double waterIntake){
+        Log.i("update", String.valueOf(waterIntake));
+        user = mAuth.getCurrentUser();
+        rootRef = FirebaseDatabase.getInstance().getReference(user.getUid());
+        profileRef = rootRef.child("WaterIntake");
+        profileRef.setValue(waterIntake);
     }
     public void onRadioButtonClicked(View view) {
         // Is the button now checked?
