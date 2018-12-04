@@ -183,23 +183,18 @@ public class MainActivity extends AppCompatActivity {
                                 loadingDialog.setContentView(R.layout.loading);
                                 loadingDialog.show();
                                 AsyncHttpClient client=new AsyncHttpClient();
-                                client.get("https://api.nal.usda.gov/ndb/V2/reports?ndbno="+fruitNdbno+"&type=f&format=json&api_key=9mmcwZMDKBZIQGWhx97v0jWfWPzmS5prWuXwdC4d", new JsonHttpResponseHandler(){
+                                client.get("https://api.nal.usda.gov/ndb/V2/reports?ndbno="+fruitNdbno+"&type=f&format=json&api_key=9mmcwZMDKBZIQGWhx97v0jWfWPzmS5prWuXwdC4d",
+                                        new JsonHttpResponseHandler(){
                                     @Override
                                     public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                                         super.onSuccess(statusCode, headers, response);
-                                        //Log.i("hasilresponse",String.valueOf(response));
                                         double refuse=0,value=0;
                                         try{
                                             JSONArray arrFood=response.getJSONArray("foods");
                                             for (int i =0 ; i<arrFood.length();i++) {
                                                 JSONObject objFood = (JSONObject) arrFood.getJSONObject(i);
-                                                //Log.i("hasilobjfood",String.valueOf(objFood));
                                                 JSONObject food=objFood.getJSONObject("food");
-                                                //Log.i("hasilfood",String.valueOf(food));
                                                 JSONObject desc=food.getJSONObject("desc");
-                                                //Log.i("hasildesc",String.valueOf(desc));
-                                                //Log.i("hasilrefuse",String.valueOf(desc.getString("r").substring(0,2)));
-                                               // Log.i("hasilrefuse",String.valueOf(desc.getString("r").length()));
                                                 if(desc.getString("r").length()==2){
                                                     refuse=Double.parseDouble(desc.getString("r").substring(0,1));
                                                 }else if(desc.getString("r").length()==3){
@@ -208,20 +203,14 @@ public class MainActivity extends AppCompatActivity {
                                                 JSONArray arrNutrient=food.getJSONArray("nutrients");
                                                 for (int j=0;j<1;j++){
                                                     JSONObject objNutrient = (JSONObject) arrNutrient.getJSONObject(i);
-                                                    //Log.i("hasilobjnutrient",String.valueOf(objNutrient));
-                                                    //Log.i("hasilvalue",String.valueOf(objNutrient.getDouble("value")));
                                                     value=objNutrient.getDouble("value");
-                                                    //Log.i("hasilvalue",String.valueOf(value));
                                                 }
                                             }
-                                            Log.i("hasil "+fruitSelected,String.valueOf(refuse+" "+value));
                                             double result=(weightSelected/100)*value*(refuse/100);
-                                            Log.i("hasil "+fruitSelected,String.format("%.2f",result));
                                             Toast.makeText(getApplicationContext(),"You eat "+String.format("%.0f",weightSelected)+" gram of "+fruitSelected+".\n" +
                                                     "So, you receive "+String.format("%.2f",result)+" ml water.",Toast.LENGTH_LONG).show();
                                             tvWaterIntake.setText(String.format("%.2f",waterIntake+=result));
                                         }catch (JSONException e){
-                                            Log.i("hasil","Ketangkep");
                                             e.printStackTrace();
                                         }
                                         updateWaterIntake(waterIntake);
@@ -337,7 +326,6 @@ public class MainActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                Log.i("testing","tampil setiap 2 jam");
                 displayReminder();
                 handler.postDelayed(this, 7200000);
             }
@@ -349,23 +337,7 @@ public class MainActivity extends AppCompatActivity {
                         .setSmallIcon(R.drawable.logo_temp)
                         .setContentTitle("You Need Water!")
                         .setContentText("Dont forget to drink water or eat fruit for your healthy inside, fresh outside!");
-
-        // Gets an instance of the NotificationManager service//
-
-        NotificationManager mNotificationManager =
-
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-        // When you issue multiple notifications about the same type of event,
-        // it’s best practice for your app to try to update an existing notification
-        // with this new information, rather than immediately creating a new notification.
-        // If you want to update this notification at a later date, you need to assign it an ID.
-        // You can then use this ID whenever you issue a subsequent notification.
-        // If the previous notification is still visible, the system will update this existing notification,
-        // rather than create a new one. In this example, the notification’s ID is 001//
-
-        //mNotificationManager.notify().
-
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.notify(001, mBuilder.build());
     }
 
