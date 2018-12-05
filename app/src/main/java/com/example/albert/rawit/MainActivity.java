@@ -53,9 +53,8 @@ public class MainActivity extends AppCompatActivity {
     EditText etWeight,etMl;
     String fruitSelected="Jeruk";
     String fruitNdbno="09200";
-    double weightSelected=0,mlSelected=0;
-    double waterIntake=0;
-    double waterRequired=0;
+    String status;
+    double weightSelected=0,mlSelected=0,waterIntake=0,waterRequired=0,weight=0,iwl=0;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private DatabaseReference rootRef,profileRef;
@@ -322,14 +321,36 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
-        final Handler handler = new Handler();
+        final Handler handler1 = new Handler();
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 displayReminder();
-                handler.postDelayed(this, 7200000);
+                handler1.postDelayed(this, 7200000);
             }
         }, 7200000);
+        final Handler handler2 = new Handler();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (waterIntake>0){
+                    waterIntake-=iwl;
+                    tvWaterIntake.setText(String.format("%.2f",waterIntake));
+                    updateWaterIntake(waterIntake);
+                    double prog=(waterIntake/waterRequired)*100;
+                    int progress=(int) prog;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        progressBar.setProgress(progress,true);
+                    }else{
+                        progressBar.setProgress(progress);
+                    }
+                }
+                if (waterIntake<waterRequired){
+                    tvTarget.setVisibility(View.GONE);
+                }
+                handler2.postDelayed(this, 5000);
+            }
+        }, 5000);
     }
     protected void displayReminder(){
         NotificationCompat.Builder mBuilder =
@@ -397,6 +418,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
+                    weight=dataSnapshot.getValue(Double.class);
                     tvWeight.setText(String.valueOf(dataSnapshot.getValue(Integer.class))+" kg");
                 }
 
@@ -421,6 +443,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
+                    iwl=dataSnapshot.getValue(Double.class)/720;
                 }
 
                 @Override
@@ -432,7 +455,8 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
-                    tvStatus.setText(dataSnapshot.getValue(String.class));
+                    status=dataSnapshot.getValue(String.class);
+                    tvStatus.setText(status+" Dehydration");
                 }
 
                 @Override
@@ -466,6 +490,9 @@ public class MainActivity extends AppCompatActivity {
                     }else{
                         progressBar.setProgress(progress);
                     }
+                    if (waterIntake>waterRequired){
+                        tvTarget.setVisibility(View.VISIBLE);
+                    }
                 }
 
                 @Override
@@ -487,11 +514,33 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     private void updateWaterIntake(double waterIntake){
-        Log.i("update", String.valueOf(waterIntake));
         user = mAuth.getCurrentUser();
         rootRef = FirebaseDatabase.getInstance().getReference(user.getUid());
         profileRef = rootRef.child("WaterIntake");
         profileRef.setValue(waterIntake);
+        updateStatus(waterIntake,waterRequired,weight);
+    }
+    private void updateStatus(double waterIntake,double waterRequired,double weight){
+        double result=(waterRequired-waterIntake)/weight;
+        Log.i("update", String.valueOf(result));
+        if (result<5){
+            Log.i("update", "no dehydration");
+            status="No";
+            tvStatus.setText(status);
+        }else if (result>10){
+            Log.i("update", "high dehydration");
+            status="High";
+            tvStatus.setText(status);
+        }else{
+            Log.i("update", "moderate dehydration");
+            status="Moderate";
+            tvStatus.setText(status);
+        }
+        tvStatus.append(" Dehydration");
+        user = mAuth.getCurrentUser();
+        rootRef = FirebaseDatabase.getInstance().getReference(user.getUid());
+        profileRef = rootRef.child("Status");
+        profileRef.setValue(status);
     }
     public void onRadioButtonClicked(View view) {
         // Is the button now checked?

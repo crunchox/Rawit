@@ -442,7 +442,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                                     profileRef = rootRef.child("WaterRequired");
                                                     profileRef.setValue(waterRequired);
                                                     profileRef = rootRef.child("Status");
-                                                    profileRef.setValue("Normal");
+                                                    profileRef.setValue("No");
                                                     Log.i("signup", "createUserWithEmail:success "+user.getUid());
                                                     Toast.makeText(getApplicationContext(),"Authentication Success",Toast.LENGTH_SHORT).show();
                                                     registerDialog2.dismiss();
