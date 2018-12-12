@@ -4,9 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -17,8 +14,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.loopj.android.http.*;
 
 import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -33,7 +28,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -43,8 +37,6 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.concurrent.LinkedBlockingDeque;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -84,6 +76,9 @@ public class MainActivity extends AppCompatActivity {
                 if(firebaseAuth.getCurrentUser()==null){
                     Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                     startActivity(intent);
+                }else{
+                    user = mAuth.getCurrentUser();
+                    rootRef = FirebaseDatabase.getInstance().getReference(user.getUid());
                 }
             }
         };
@@ -99,6 +94,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 mAuth.signOut();
+                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                startActivity(intent);
             }
         });
         btnReset=(Button)findViewById(R.id.btn_reset);
@@ -562,8 +559,6 @@ public class MainActivity extends AppCompatActivity {
         collect.execute();
     }
     private void updateWaterIntake(double waterIntake){
-        user = mAuth.getCurrentUser();
-        rootRef = FirebaseDatabase.getInstance().getReference(user.getUid());
         profileRef = rootRef.child("WaterIntake");
         profileRef.setValue(waterIntake);
         updateStatus(waterIntake,waterRequired,weight);
@@ -581,8 +576,6 @@ public class MainActivity extends AppCompatActivity {
             tvStatus.setText(status);
         }
         tvStatus.append(" Dehydration");
-        user = mAuth.getCurrentUser();
-        rootRef = FirebaseDatabase.getInstance().getReference(user.getUid());
         profileRef = rootRef.child("Status");
         profileRef.setValue(status);
     }

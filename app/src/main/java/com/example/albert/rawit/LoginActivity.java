@@ -612,7 +612,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                 // Sign in success, update UI with the signed-in user's information
                                 FirebaseUser user = mAuth.getCurrentUser();
                                 Log.i("signin", "createUserWithEmail:success "+user);
-                                Toast.makeText(getApplicationContext(),"Auth Success "+user,Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(),"Auth Success",Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                 startActivity(intent);
                                 finish();
@@ -636,6 +636,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             if (success) {
                 loadingDialog.dismiss();
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                startActivity(intent);
                 finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
