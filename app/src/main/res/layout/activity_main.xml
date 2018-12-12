@@ -6,167 +6,173 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".MainActivity"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin">
+    android:padding="16dp">
 
-    <RelativeLayout
+    <ProgressBar
+        android:id="@+id/progressBar2"
+        style="?android:attr/progressBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="100dp"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/tv_Name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Name"/>
-            <TextView
-                android:id="@+id/tv_Age"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Age"/>
-            <TextView
-                android:id="@+id/tv_Height"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Height"/>
-            <TextView
-                android:id="@+id/tv_Weight"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Weight"/>
-            <TextView
-                android:id="@+id/tv_Gender"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Gender"/>
-        </LinearLayout>
+        android:visibility="gone"/>
 
-        <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_centerInParent="true"
-            android:src="@drawable/logo_temp" />
-
-        <Button
-            android:id="@+id/btn_logout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:text="Logout" />
-    </RelativeLayout>
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"/>
-    <LinearLayout
+        android:id="@+id/main_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal">
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
-            <ProgressBar
-                android:id="@+id/progressBar"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:progressDrawable="@drawable/progressbartheme"/>
-        </LinearLayout>
-        <LinearLayout
-            android:layout_marginLeft="10dp"
-            android:layout_width="200dp"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+        android:orientation="vertical">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
+                android:layout_width="wrap_content"
+                android:layout_height="100dp"
                 android:orientation="vertical">
                 <TextView
+                    android:id="@+id/tv_Name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Target"/>
+                    android:layout_weight="1"/>
+                <TextView
+                    android:id="@+id/tv_Age"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+                <TextView
+                    android:id="@+id/tv_Height"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+                <TextView
+                    android:id="@+id/tv_Weight"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+                <TextView
+                    android:id="@+id/tv_Gender"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_centerInParent="true"
+                android:src="@drawable/logo_temp" />
+
+            <Button
+                android:id="@+id/btn_logout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:text="Logout" />
+        </RelativeLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:progressDrawable="@drawable/progressbartheme"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_marginLeft="10dp"
+                android:layout_width="200dp"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        android:id="@+id/tv_water_intake"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"/>
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text=" ml / "/>
+                        android:text="Target"/>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:id="@+id/tv_water_intake"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=" ml / "/>
+                        <TextView
+                            android:id="@+id/tv_water_required"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=" ml"/>
+                    </LinearLayout>
                     <TextView
-                        android:id="@+id/tv_water_required"
+                        android:id="@+id/tv_target"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="0"/>
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=" ml"/>
+                        android:textColor="#90ee90"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:text="Target Achieved"
+                        android:visibility="invisible"/>
                 </LinearLayout>
-                <TextView
-                    android:id="@+id/tv_target"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Status"/>
+                    <TextView
+                        android:id="@+id/tv_Status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="30dp"/>
+                </LinearLayout>
+                <Button
+                    android:id="@+id/btn_reset"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="#90ee90"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:text="Target Achieved"
-                    android:visibility="invisible"/>
+                    android:text="reset progress"/>
             </LinearLayout>
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="60dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical">
-                <TextView
-                    android:layout_width="wrap_content"
+                android:orientation="vertical"
+                android:layout_weight="1">
+                <Button
+                    android:id="@+id/btn_drink"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Status"/>
-                <TextView
-                    android:id="@+id/tv_Status"
-                    android:layout_width="wrap_content"
+                    android:text="drink"
+                    android:layout_weight="1"/>
+                <Button
+                    android:id="@+id/btn_eat"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="30dp"/>
+                    android:text="eat"
+                    android:layout_weight="1"/>
             </LinearLayout>
-            <Button
-                android:id="@+id/btn_reset"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="reset progress"/>
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="60dp"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:layout_weight="1">
-            <Button
-                android:id="@+id/btn_drink"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="drink"
-                android:layout_weight="1"/>
-            <Button
-                android:id="@+id/btn_eat"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="eat"
-                android:layout_weight="1"/>
         </LinearLayout>
     </LinearLayout>
+
 
 </LinearLayout>

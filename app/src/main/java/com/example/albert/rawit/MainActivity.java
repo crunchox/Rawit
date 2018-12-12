@@ -1,5 +1,6 @@
 package com.example.albert.rawit;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 
@@ -21,6 +22,7 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -32,6 +34,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.TextView;
@@ -41,17 +44,21 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.concurrent.LinkedBlockingDeque;
+
 import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity {
     Dialog fruitDialog,weightDialog,loadingDialog,waterDialog;
     Button btnEat,btnDrink,btnLogout,btnReset;
 //    ImageView ivAbu,ivBiru;
-    ProgressBar progressBar;
+    ProgressBar progressBar,progressBar2;
+    LinearLayout mainLayout;
+    boolean isCollected=false;
     TextView tvWaterIntake,tvWaterRequired,tvTarget,tvStatus;
     TextView tvName,tvAge,tvHeight,tvWeight,tvGender;
     EditText etWeight,etMl;
-    String fruitSelected="Jeruk";
+    String fruitSelected="Orange";
     String fruitNdbno="09200";
     String status;
     double weightSelected=0,mlSelected=0,waterIntake=0,waterRequired=0,weight=0,iwl=0;
@@ -63,12 +70,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart(){
         super.onStart();
         mAuth.addAuthStateListener((mAuthListener));
-        collectData();
     }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        loadingDialog=new Dialog(this);
+        loadingDialog.setContentView(R.layout.loading);
         mAuth = FirebaseAuth.getInstance();
         mAuthListener=new FirebaseAuth.AuthStateListener() {
             @Override
@@ -79,6 +87,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
+        progressBar2=(ProgressBar)findViewById(R.id.progressBar2);
+        mainLayout=(LinearLayout)findViewById(R.id.main_layout);
+        mainLayout.setVisibility(View.GONE);
+        progressBar2.setVisibility(View.VISIBLE);
         btnEat=(Button)findViewById(R.id.btn_eat);
         btnDrink=(Button)findViewById(R.id.btn_drink);
         progressBar=(ProgressBar)findViewById(R.id.progressBar);
@@ -106,6 +118,14 @@ public class MainActivity extends AppCompatActivity {
                 tvTarget.setVisibility(View.GONE);
             }
         });
+        if (!isCollected) {
+            Toast.makeText(getApplicationContext(), "Collecting Your Valuable Data", Toast.LENGTH_SHORT).show();
+            btnReset.setEnabled(false);
+            btnLogout.setEnabled(false);
+            btnDrink.setEnabled(false);
+            btnEat.setEnabled(false);
+            collectData();
+        }
         tvName=(TextView)findViewById(R.id.tv_Name);
         tvAge=(TextView)findViewById(R.id.tv_Age);
         tvHeight=(TextView)findViewById(R.id.tv_Height);
@@ -117,7 +137,6 @@ public class MainActivity extends AppCompatActivity {
         tvTarget=(TextView)findViewById(R.id.tv_target);
         fruitDialog=new Dialog(this);
         weightDialog=new Dialog(this);
-        loadingDialog=new Dialog(this);
         waterDialog=new Dialog(this);
         btnEat.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -179,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
                                     weightSelected=Double.parseDouble(etWeight.getText().toString());
                                 }
                                 weightDialog.dismiss();
-                                loadingDialog.setContentView(R.layout.loading);
+                                loadingDialog.getWindow();
                                 loadingDialog.show();
                                 AsyncHttpClient client=new AsyncHttpClient();
                                 client.get("https://api.nal.usda.gov/ndb/V2/reports?ndbno="+fruitNdbno+"&type=f&format=json&api_key=9mmcwZMDKBZIQGWhx97v0jWfWPzmS5prWuXwdC4d",
@@ -234,6 +253,8 @@ public class MainActivity extends AppCompatActivity {
                                     @Override
                                     public void onFinish() {
                                         super.onFinish();
+                                        fruitSelected="Orange";
+                                        fruitNdbno="09200";
                                         loadingDialog.dismiss();
                                     }
 
@@ -289,7 +310,6 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
                         waterDialog.dismiss();
-                        loadingDialog.setContentView(R.layout.loading);
                         loadingDialog.getWindow();
                         loadingDialog.show();
                         if(etMl.getText().toString().matches("")){
@@ -335,6 +355,9 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 if (waterIntake>0){
                     waterIntake-=iwl;
+                    if (waterIntake<0){
+                        waterIntake=0;
+                    }
                     tvWaterIntake.setText(String.format("%.2f",waterIntake));
                     updateWaterIntake(waterIntake);
                     double prog=(waterIntake/waterRequired)*100;
@@ -363,155 +386,180 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void collectData(){
-        user = mAuth.getCurrentUser();
-        if (user!=null){
-            profileRef=FirebaseDatabase.getInstance().getReference(user.getUid());
-            profileRef.child("FirstName").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
-                    tvName.setText(dataSnapshot.getValue(String.class)+" ");
-                }
+        @SuppressLint("StaticFieldLeak") AsyncTask<String,String,String> collect=new AsyncTask<String, String, String>() {
+            @Override
+            protected void onPreExecute() {
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
 
-                }
-            });
-            profileRef.child("LastName").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
-                    tvName.append(dataSnapshot.getValue(String.class));
-                }
+            @Override
+            protected String doInBackground(String... strings) {
+                    user = mAuth.getCurrentUser();
+                    if (user!=null){
+                        profileRef=FirebaseDatabase.getInstance().getReference(user.getUid());
+                        profileRef.child("FirstName").addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
+                                tvName.setText(dataSnapshot.getValue(String.class)+" ");
+                            }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                }
-            });
-            profileRef.child("Age").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
-                    tvAge.setText(String.valueOf(dataSnapshot.getValue(Integer.class))+" years old");
-                }
+                            }
+                        });
+                        profileRef.child("LastName").addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
+                                tvName.append(dataSnapshot.getValue(String.class));
+                            }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                }
-            });
-            profileRef.child("Height").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
-                    tvHeight.setText(String.valueOf(dataSnapshot.getValue(Integer.class))+" cm");
-                }
+                            }
+                        });
+                        profileRef.child("Age").addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
+                                tvAge.setText(String.valueOf(dataSnapshot.getValue(Integer.class))+" years old");
+                            }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                }
-            });
-            profileRef.child("Weight").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
-                    weight=dataSnapshot.getValue(Double.class);
-                    tvWeight.setText(String.valueOf(dataSnapshot.getValue(Integer.class))+" kg");
-                }
+                            }
+                        });
+                        profileRef.child("Height").addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
+                                tvHeight.setText(String.valueOf(dataSnapshot.getValue(Integer.class))+" cm");
+                            }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                }
-            });
-            profileRef.child("Gender").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
-                    tvGender.setText(dataSnapshot.getValue(String.class));
-                }
+                            }
+                        });
+                        profileRef.child("Weight").addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
+                                weight=dataSnapshot.getValue(Double.class);
+                                tvWeight.setText(String.valueOf(dataSnapshot.getValue(Integer.class))+" kg");
+                            }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                }
-            });
-            profileRef.child("IWL").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
-                    iwl=dataSnapshot.getValue(Double.class)/720;
-                }
+                            }
+                        });
+                        profileRef.child("Gender").addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
+                                tvGender.setText(dataSnapshot.getValue(String.class));
+                            }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                }
-            });
-            profileRef.child("Status").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
-                    status=dataSnapshot.getValue(String.class);
-                    tvStatus.setText(status+" Dehydration");
-                }
+                            }
+                        });
+                        profileRef.child("IWL").addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Log.i("profile", String.valueOf(dataSnapshot.getValue(Integer.class)));
+                                iwl=dataSnapshot.getValue(Double.class)/720;
+                            }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                }
-            });
-            profileRef.child("WaterIntake").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Log.i("profile", String.valueOf(dataSnapshot.getValue(Double.class)));
-                    waterIntake=dataSnapshot.getValue(Double.class);
-                    tvWaterIntake.setText(String.format("%.2f",waterIntake));
-                }
+                            }
+                        });
+                        profileRef.child("Status").addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
+                                status=dataSnapshot.getValue(String.class);
+                                tvStatus.setText(status+" Dehydration");
+                            }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                }
-            });
-            profileRef.child("WaterRequired").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Log.i("profile", String.valueOf(dataSnapshot.getValue(Double.class)));
-                    waterRequired=dataSnapshot.getValue(Double.class);
-                    tvWaterRequired.setText(String.format("%.2f",waterRequired));
-                    double prog=(waterIntake/waterRequired)*100;
-                    int progress=(int) prog;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        progressBar.setProgress(progress,true);
-                    }else{
-                        progressBar.setProgress(progress);
+                            }
+                        });
+                        profileRef.child("WaterIntake").addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Log.i("profile", String.valueOf(dataSnapshot.getValue(Double.class)));
+                                waterIntake=dataSnapshot.getValue(Double.class);
+                                tvWaterIntake.setText(String.format("%.2f",waterIntake));
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
+                        profileRef.child("WaterRequired").addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Log.i("profile", String.valueOf(dataSnapshot.getValue(Double.class)));
+                                waterRequired=dataSnapshot.getValue(Double.class);
+                                tvWaterRequired.setText(String.format("%.2f",waterRequired));
+                                double prog=(waterIntake/waterRequired)*100;
+                                int progress=(int) prog;
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    progressBar.setProgress(progress,true);
+                                }else{
+                                    progressBar.setProgress(progress);
+                                }
+                                if (waterIntake>waterRequired){
+                                    tvTarget.setVisibility(View.VISIBLE);
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
+                        profileRef.child("Activity").addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
                     }
-                    if (waterIntake>waterRequired){
-                        tvTarget.setVisibility(View.VISIBLE);
-                    }
-                }
+                return "done";
+            }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
+            @Override
+            protected void onPostExecute(String s) {
+                if(s.equals("done")){
+                    mainLayout.setVisibility(View.VISIBLE);
+                    progressBar2.setVisibility(View.GONE);
+                    isCollected=true;
+                    btnReset.setEnabled(true);
+                    btnLogout.setEnabled(true);
+                    btnDrink.setEnabled(true);
+                    btnEat.setEnabled(true);
                 }
-            });
-            profileRef.child("Activity").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Log.i("profile", String.valueOf(dataSnapshot.getValue(String.class)));
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                }
-            });
-        }
+            }
+        };
+        collect.execute();
     }
     private void updateWaterIntake(double waterIntake){
         user = mAuth.getCurrentUser();
@@ -522,17 +570,13 @@ public class MainActivity extends AppCompatActivity {
     }
     private void updateStatus(double waterIntake,double waterRequired,double weight){
         double result=(waterRequired-waterIntake)/weight;
-        Log.i("update", String.valueOf(result));
         if (result<5){
-            Log.i("update", "no dehydration");
             status="No";
             tvStatus.setText(status);
         }else if (result>10){
-            Log.i("update", "high dehydration");
             status="High";
             tvStatus.setText(status);
         }else{
-            Log.i("update", "moderate dehydration");
             status="Moderate";
             tvStatus.setText(status);
         }
