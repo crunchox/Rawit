@@ -43,7 +43,6 @@ import cz.msebera.android.httpclient.Header;
 public class MainActivity extends AppCompatActivity {
     Dialog fruitDialog,weightDialog,loadingDialog,waterDialog;
     Button btnEat,btnDrink,btnLogout,btnReset;
-//    ImageView ivAbu,ivBiru;
     ProgressBar progressBar,progressBar2;
     LinearLayout mainLayout;
     boolean isCollected=false;
@@ -93,9 +92,10 @@ public class MainActivity extends AppCompatActivity {
         btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mAuth.signOut();
-                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-                startActivity(intent);
+//                mAuth.signOut();
+//                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+//                startActivity(intent);
+                displayReminder();
             }
         });
         btnReset=(Button)findViewById(R.id.btn_reset);
@@ -377,7 +377,8 @@ public class MainActivity extends AppCompatActivity {
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.logo_temp)
                         .setContentTitle("You Need Water!")
-                        .setContentText("Dont forget to drink water or eat fruit for your healthy inside, fresh outside!");
+                        .setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText("Dont forget to drink water or eat fruit for your healthy inside, fresh outside!"));
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.notify(001, mBuilder.build());
     }
