@@ -4,6 +4,11 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 
+import com.firebase.jobdispatcher.FirebaseJobDispatcher;
+import com.firebase.jobdispatcher.GooglePlayDriver;
+import com.firebase.jobdispatcher.Job;
+import com.firebase.jobdispatcher.Lifetime;
+import com.firebase.jobdispatcher.Trigger;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -38,6 +43,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.concurrent.TimeUnit;
+
 import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity {
@@ -57,6 +64,10 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth.AuthStateListener mAuthListener;
     private DatabaseReference rootRef,profileRef;
     private FirebaseUser user;
+    private FirebaseJobDispatcher firebaseJobDispatcher;
+    private static final int REMINDER_INTERVAL_MINUTES = 15;
+    private static final int REMINDER_INTERVAL_SECONDS = (int) (TimeUnit.MINUTES.toSeconds(REMINDER_INTERVAL_MINUTES));
+    private static final int SYNC_FLEXTIME_SECONDS = REMINDER_INTERVAL_SECONDS;
     @Override
     protected void onStart(){
         super.onStart();
@@ -66,6 +77,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        firebaseJobDispatcher=new FirebaseJobDispatcher(new GooglePlayDriver(this));
+        Job job=firebaseJobDispatcher.newJobBuilder()
+                .setService(MyJobService.class)
+                .setTag("Reminder")
+                .setLifetime(Lifetime.FOREVER)
+                .setRecurring(true)
+                .setTrigger(Trigger.executionWindow(REMINDER_INTERVAL_SECONDS,REMINDER_INTERVAL_SECONDS+SYNC_FLEXTIME_SECONDS))
+                .setReplaceCurrent(true)
+                .build();
+        firebaseJobDispatcher.schedule(job);
         loadingDialog=new Dialog(this);
         loadingDialog.setContentView(R.layout.loading);
         mAuth = FirebaseAuth.getInstance();
@@ -337,14 +358,14 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
-        final Handler handler1 = new Handler();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                displayReminder();
-                handler1.postDelayed(this, 7200000);
-            }
-        }, 7200000);
+//        final Handler handler1 = new Handler();
+//        new Handler().postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                displayReminder();
+//                handler1.postDelayed(this, 7200000);
+//            }
+//        }, 7200000);
         final Handler handler2 = new Handler();
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -370,6 +391,9 @@ public class MainActivity extends AppCompatActivity {
                 handler2.postDelayed(this, 5000);
             }
         }, 5000);
+
+        //scheduleChargingReminder(this);
+
     }
     protected void displayReminder(){
         NotificationCompat.Builder mBuilder =
